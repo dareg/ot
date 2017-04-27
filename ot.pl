@@ -9,6 +9,32 @@ use List::MoreUtils qw(all any);
 use List::Util qw (min);
 use utf8;
 use open qw(:std :utf8);
+use File::Find;
+use File::HomeDir;
+use Encode qw(decode);
+
+sub generate_db {
+				my @directories_to_search = (File::HomeDir->my_home);
+
+				sub preprocess {
+								#rejects hidden directories
+								return grep { -f or (-d and /^[^.]/) } @_;
+				}
+
+				sub wanted_closure {
+								my @found = ();
+
+								my $finder = sub { push @found, decode('UTF-8', $File::Find::name)};
+								my $results = sub {@found};
+
+								return ($finder, $results);
+				}
+
+				my ($wanted, $list_of_files) = wanted_closure();
+
+				find({preprocess => \&preprocess, wanted => $wanted }, @directories_to_search);
+				return $list_of_files->();
+}
 
 #First argument must be the file containing the list of files
 #Other arguments are search keywords
@@ -20,8 +46,8 @@ sub get_list_of_match {
 				my @matches_in_filename;
 
 				my @results;
+				my @list_of_files = generate_db();
 
-				open my $handle_files, '<', $_[0] or die "Cannot open file:$_[0]\n";
 
 #Push regex into the arrays
 				foreach my $argnum (1 .. $#_) {
@@ -30,7 +56,7 @@ sub get_list_of_match {
 								push @matches_in_filename, qr/$word[^\/]*$/i;
 				}
 
-				while (my $file = <$handle_files>) {
+				foreach my $file (@list_of_files) {
 								if ( all {$file =~ $_ } @matches_anywhere) {
 												if ( any { $file =~ $_ } @matches_in_filename ) {
 																push @results,$file
