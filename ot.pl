@@ -19,7 +19,7 @@ sub generate_db {
 
 				sub preprocess {
 								#rejects hidden directories
-								return grep { -f or (-d and /^[^.]/) } @_;
+								return grep { ( -f and /^[^.]/ ) or ( -d and /^[^.]/ ) } @_;
 				}
 
 				sub wanted_closure {
