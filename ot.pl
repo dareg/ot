@@ -71,7 +71,7 @@ sub get_list_of_match {
 }
 
 sub usage {
-    print "usage: ot [--generate] [--db file]\n";
+    print "usage: ot --db file [--generate]\n";
     return;
 }
 
